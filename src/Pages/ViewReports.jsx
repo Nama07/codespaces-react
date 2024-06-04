@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-
+import "./Report.css";
 const ReportsList = () => {
   const [reports, setReports] = useState([]);
   const [filters, setFilters] = useState({
@@ -9,7 +9,7 @@ const ReportsList = () => {
     endDate: '',
     type: '',
     severity: '',
-    name: '', // Added name filter
+    name: '', 
   });
   const [selectedReports, setSelectedReports] = useState([]);
 
@@ -24,7 +24,7 @@ const ReportsList = () => {
   };
 
   const applyFilters = (reports) => {
-    return reports.filter(report => {
+    return reports.filter((report) => {
       const reportDate = new Date(report.timestamp);
       const startDate = filters.startDate ? new Date(filters.startDate) : null;
       const endDate = filters.endDate ? new Date(filters.endDate) : null;
@@ -43,28 +43,23 @@ const ReportsList = () => {
     if (checked) {
       setSelectedReports([...selectedReports, report]);
     } else {
-      setSelectedReports(selectedReports.filter(r => r.id !== report.id));
+      setSelectedReports(selectedReports.filter((r) => r.id !== report.id));
     }
   };
 
   const exportToPDF = () => {
-    const doc = new jsPDF();
-    
-    doc.text('Selected Reports List', 20, 10);
-    
-    doc.autoTable({
-      head: [['ID', 'Name', 'Type', 'Severity', 'Timestamp', 'Description']],
-      body: selectedReports.map(report => [
-        report.id, 
-        report.name, 
-        report.type, 
-        report.severity, 
-        report.timestamp, 
-        report.description
-      ]),
-    });
+    selectedReports.forEach((report) => {
+      const doc = new jsPDF();
 
-    doc.save('selected_reports.pdf');
+      doc.text(`Report: ${report.name}`, 20, 10);
+
+      doc.autoTable({
+        head: [['ID', 'Name', 'Type', 'Severity', 'Timestamp', 'Description']],
+        body: [[report.id, report.name, report.type, report.severity, report.timestamp, report.description]],
+      });
+
+      doc.save(`${report.name}_report.pdf`);
+    });
   };
 
   const filteredReports = applyFilters(reports);
@@ -146,11 +141,11 @@ const ReportsList = () => {
         </thead>
         <tbody>
           {filteredReports.map((report, index) => (
-            <tr key={index}>
+            <tr key={report.id}>
               <td>
-                <input 
-                  type="checkbox" 
-                  onChange={(e) => handleSelectReport(e, report)} 
+                <input
+                  type="checkbox"
+                  onChange={(e) => handleSelectReport(e, report)}
                 />
               </td>
               <td>{report.id}</td>

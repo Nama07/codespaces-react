@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import './Login.css'; // Import your CSS file
 
 function Login() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(true);
+  const [email, setEmail] = useState('');
 
-  function handleRegister() {
+  async function handleRegister() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
     const confirmPassword = document.getElementById("confirmPassword").value;
@@ -23,22 +25,55 @@ function Login() {
     localStorage.setItem("email", email);
     localStorage.setItem("password", password);
     setIsLoggedIn(true);
+    setEmail(email);
     closeModal();
   }
 
-  function handleLogin() {
+  async function handleLogin() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
-    const storedEmail = localStorage.getItem("email");
-    const storedPassword = localStorage.getItem("password");
+    try {
+      const response = await fetch('http://localhost:5000/api/Team2/Login?username=' + email + '&password=' + password, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-    if (email === storedEmail && password === storedPassword) {
-      alert("Přihlášení úspěšné");
-      setIsLoggedIn(true);
-      closeModal();
-    } else {
-      alert("Nesprávný email nebo heslo, zkuste to znovu.");
+      if (response.ok) {
+        console.log("Přihlášení úspěšné");
+        setIsLoggedIn(true);
+        setEmail(email);
+        closeModal();
+      } else {
+        console.log("Nesprávný email nebo heslo, zkuste to znovu.");
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+      console.log('Nastala chyba při přihlašování, zkuste to znovu.');
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      const response = await fetch('http://localhost:5000/api/Team2/Logout?username=' + email, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        console.log("Odhlášení úspěšné");
+        setIsLoggedIn(false);
+        setEmail('');
+      } else {
+        console.log("Chyba odhlašování.");
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+      console.log('Nastala chyba při odhlašování.');
     }
   }
 
@@ -61,12 +96,12 @@ function Login() {
           {!isLoggedIn ? (
             <button className="btn btn-primary" onClick={openModal}>Přihlásit se</button>
           ) : (
-            <button className="btn btn-danger" onClick={() => setIsLoggedIn(false)}>odhlásit se</button>
+            <button className="btn btn-danger" onClick={handleLogout}>Odhlásit se</button>
           )}
         </div>
       </div>
 
-      <div id="authModal" className="modal" style={{ display: 'none' }}>
+      <div id="authModal" className="custom-modal modal" style={{ display: 'none' }}>
         <div className="modal-dialog">
           <div className="modal-content">
             <div className="modal-header">
@@ -92,7 +127,7 @@ function Login() {
               )}
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={toggleMode}>
+              <button type="button" className="btn btn-secondary switch-button" onClick={toggleMode}>
                 {isLoginMode ? "Změnit na Registraci" : "Změnit na Přihlášení"}
               </button>
               <button
@@ -102,7 +137,6 @@ function Login() {
               >
                 {isLoginMode ? "Přihlásit se" : "Registrovat"}
               </button>
-              
             </div>
           </div>
         </div>
